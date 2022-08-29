@@ -96,7 +96,7 @@ func parseNumberWithUnit(input string, unit string, r *int) (string, error) {
 	}
 	rest, err = parseRegex(rest, unit)
 	if err != nil {
-		return rest, errors.New("missing unit " + unit)
+		return rest, errors.New("expecting unit " + unit)
 	}
 	return rest, nil
 }
@@ -128,14 +128,7 @@ func parseAnyMinute(input string, r *int) (string, error) {
 		return rest, nil
 	}
 	var k int
-	rest, err = parseAllOf(ParseFuncList[int]{
-		func(input string, k *int) (string, error) {
-			return parseAnyNumber(input, k)
-		},
-		func(input string, _ *int) (string, error) {
-			return parseRegex(input, "刻")
-		},
-	})(input, &k)
+	rest, err = parseNumberWithUnit(input, "刻", &k)
 	if err == nil {
 		*r = k * 15
 		return rest, nil
@@ -570,13 +563,13 @@ func (dp *DateTimeParser) parseAnyDate(input string, result *DateTimeParseResult
 		dp.parseNextWeekday,
 		dp.parseWeekAfterNextWeekday,
 		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseLastMonth, dp.parseDay}),
-		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseLastMonth}),
+		dp.parseLastMonth,
 		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseNextMonth, dp.parseDay}),
-		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseNextMonth}),
+		dp.parseNextMonth,
 		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseLastYear, dp.parseMD}),
-		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseLastYear}),
+		dp.parseLastYear,
 		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseNextYear, dp.parseMD}),
-		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseNextYear}),
+		dp.parseNextYear,
 		dp.parseYMD,
 		dp.parseMD,
 	})(input, result)
@@ -599,10 +592,10 @@ func (dp *DateTimeParser) parseAnyTime(input string, result *DateTimeParseResult
 }
 
 func (dp *DateTimeParser) parseAnyDateTime(input string, result *DateTimeParseResult) (string, error) {
-	return parseAllOf(ParseFuncList[DateTimeParseResult]{
-		parseAnyOf(ParseFuncList[DateTimeParseResult]{
+	return parseAnyOf(ParseFuncList[DateTimeParseResult]{
+		parseAllOf(ParseFuncList[DateTimeParseResult]{
 			dp.parseAnyDate,
-			dp.ignore,
+			dp.parseAnyTime,
 		}),
 		dp.parseAnyTime,
 	})(input, result)
