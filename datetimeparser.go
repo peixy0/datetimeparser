@@ -301,6 +301,18 @@ func (dp *DateTimeParser) parseNextYear(input string, result *DateTimeParseResul
 	return rest, nil
 }
 
+func (dp *DateTimeParser) parseThisMonth(input string, result *DateTimeParseResult) (string, error) {
+	rest, err := parseRegex(input, "(这(个)?|本)月")
+	if err != nil {
+		return rest, err
+	}
+	n := dp.Base
+	result.Year = n.Year()
+	result.Month = int(n.Month())
+	result.Day = n.Day()
+	return rest, nil
+}
+
 func (dp *DateTimeParser) parseLastMonth(input string, result *DateTimeParseResult) (string, error) {
 	rest, err := parseRegex(input, "上个月")
 	if err != nil {
@@ -562,6 +574,7 @@ func (dp *DateTimeParser) parseAnyDate(input string, result *DateTimeParseResult
 		dp.parseLastWeekday,
 		dp.parseNextWeekday,
 		dp.parseWeekAfterNextWeekday,
+		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseThisMonth, dp.parseDay}),
 		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseLastMonth, dp.parseDay}),
 		dp.parseLastMonth,
 		parseAllOf(ParseFuncList[DateTimeParseResult]{dp.parseNextMonth, dp.parseDay}),

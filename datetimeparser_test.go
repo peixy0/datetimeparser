@@ -77,6 +77,20 @@ func TestParseTimeWithQuarter(t *testing.T) {
 	assert(t, r.Second(), 0, "second mismatch")
 }
 
+func TestParseThisMonth(t *testing.T) {
+	shanghai, _ := time.LoadLocation("Asia/Shanghai")
+	base := time.Date(2022, time.August, 20, 12, 34, 56, 32, shanghai)
+	dateParser := NewDateTimeParser(base)
+	r, err := dateParser.ParseDateTime("这个月31号早上8点15")
+	assert(t, err, nil, "error")
+	assert(t, r.Year(), 2022, "year mismatch")
+	assert(t, r.Month(), time.August, "month mismatch")
+	assert(t, r.Day(), 31, "day mismatch")
+	assert(t, r.Hour(), 8, "hour mismatch")
+	assert(t, r.Minute(), 15, "minute mismatch")
+	assert(t, r.Second(), 0, "second mismatch")
+}
+
 func TestParseThisWeek(t *testing.T) {
 	shanghai, _ := time.LoadLocation("Asia/Shanghai")
 	base := time.Date(2022, time.August, 20, 12, 34, 56, 32, shanghai)
